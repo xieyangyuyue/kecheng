@@ -114,18 +114,45 @@ class FTD:
             self.w += self.alpha * (Rsum - self.U(state)) * self.dU(state)
 
 
-# 创建环境并运行训练
-env = Env("Robot Navigation")
-td_agent = TD(env)
-td_agent.train()
+# 进行多次训练并记录结果
+def run_multiple_trainings(num_runs=10, episodes=1000):
+    td_results = []
+    q_learning_results = []
+    ftd_results = []
 
-q_learning_agent = QLearning(env)
-q_learning_agent.train()
+    for run in range(num_runs):
+        print(f"运行 {run + 1}/{num_runs}...")
 
-ftd_agent = FTD(env)
-ftd_agent.train()
+        # 创建环境和代理
+        env = Env("Robot Navigation")
+        
+        # TD训练
+        td_agent = TD(env)
+        td_agent.train(episodes)
+        td_results.append(td_agent.U)  # 记录价值函数
+        
+        # Q-Learning训练
+        q_learning_agent = QLearning(env)
+        q_learning_agent.train(episodes)
+        q_learning_results.append(q_learning_agent.Q)  # 记录Q值
+        
+        # FTD训练
+        ftd_agent = FTD(env)
+        ftd_agent.train(episodes)
+        ftd_results.append(ftd_agent.w)  # 记录权重
+
+    return td_results, q_learning_results, ftd_results
+
+
+# 运行多次训练
+num_runs = 10
+episodes = 1000
+td_results, q_learning_results, ftd_results = run_multiple_trainings(num_runs, episodes)
 
 # 输出最终的价值函数或 Q 值，用于验证
-print("TD 价值函数:", td_agent.U)
-print("Q-Learning Q值:", q_learning_agent.Q)
-print("FTD 权重:", ftd_agent.w)
+for i in range(num_runs):
+    print(f"运行 {i + 1}:")
+    print("TD 价值函数:", td_results[i])
+    print("Q-Learning Q值:", q_learning_results[i])
+    print("FTD 权重:", ftd_results[i])
+    print()
