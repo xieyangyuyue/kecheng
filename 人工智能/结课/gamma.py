@@ -68,7 +68,7 @@ class QLearning:
         self.epsilon = epsilon  # 探索率
         self.Q = np.ones((self.env.n_states, self.env.n_actions)) / self.env.n_actions  # 初始化Q值
 
-    def train(self, episodes=1000):
+    def train(self, episodes=10000):
         for _ in range(episodes):
             state = np.random.choice([i for i in range(self.env.n_states) if i not in self.env.end_states])
             while state not in self.env.end_states:
