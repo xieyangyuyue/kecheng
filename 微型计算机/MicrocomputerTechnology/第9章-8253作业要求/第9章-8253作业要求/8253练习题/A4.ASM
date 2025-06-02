@@ -1,0 +1,8 @@
+CODE 	SEGMENT  
+        ASSUME CS:CODE
+START:			
+CODE  	ENDS
+	END	START
+
+
+
