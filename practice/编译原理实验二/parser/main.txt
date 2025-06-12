@@ -1,0 +1,245 @@
+package main
+//
+//import (
+//	"bufio"
+//	"fmt"
+//	"os"
+//	"strings"
+//)
+//
+//const (
+//	maxStack   = 100
+//	maxInput   = 100
+//	numNonTerm = 5 // E, G, T, S, F
+//	numTerm    = 8 // i, +, -, *, /, (, ), #
+//)
+//
+//// Production 产生式结构体
+//type Production struct {
+//	Origin byte
+//	Array  string
+//	Length int
+//}
+//
+//// Parser 解析器状态
+//type Parser struct {
+//	stack    []byte                          // 分析栈
+//	input    []byte                          // 输入字符串
+//	inputPos int                             // 当前输入位置
+//	errorPos int                             // 错误位置
+//	table    [numNonTerm][numTerm]Production // 分析表
+//}
+//
+//// 初始化产生式
+//func (p *Parser) initProductions() {
+//	// 定义各个产生式
+//	e := Production{Origin: 'E', Array: "TG", Length: 2}
+//	g1 := Production{Origin: 'G', Array: "+TG", Length: 3}
+//	g2 := Production{Origin: 'G', Array: "ε", Length: 0}
+//	t := Production{Origin: 'T', Array: "FS", Length: 2}
+//	s1 := Production{Origin: 'S', Array: "*FS", Length: 3}
+//	s2 := Production{Origin: 'S', Array: "ε", Length: 0}
+//	f1 := Production{Origin: 'F', Array: "(E)", Length: 3}
+//	f2 := Production{Origin: 'F', Array: "i", Length: 1}
+//	errorProd := Production{Origin: 'N', Array: "", Length: 0}
+//
+//	// 初始化分析表为错误产生式
+//	for i := range p.table {
+//		for j := range p.table[i] {
+//			p.table[i][j] = errorProd
+//		}
+//	}
+//
+//	// 填充分析表
+//	// E的产生式
+//	p.table[0][0] = e // i
+//	p.table[0][5] = e // (
+//	// G的产生式
+//	p.table[1][1] = g1 // +
+//	p.table[1][2] = g1 // -
+//	p.table[1][6] = g2 // )
+//	p.table[1][7] = g2 // #
+//	// T的产生式
+//	p.table[2][0] = t // i
+//	p.table[2][5] = t // (
+//	// S的产生式
+//	p.table[3][3] = s1 // *
+//	p.table[3][4] = s1 // /
+//	p.table[3][1] = s2 // +
+//	p.table[3][2] = s2 // -
+//	p.table[3][6] = s2 // )
+//	p.table[3][7] = s2 // #
+//	// F的产生式
+//	p.table[4][0] = f2 // i
+//	p.table[4][5] = f1 // (
+//}
+//
+//// 获取终结符索引
+//func (p *Parser) getTerminalIndex(c byte) int {
+//	switch c {
+//	case 'i':
+//		return 0
+//	case '+':
+//		return 1
+//	case '-':
+//		return 2
+//	case '*':
+//		return 3
+//	case '/':
+//		return 4
+//	case '(':
+//		return 5
+//	case ')':
+//		return 6
+//	case '#':
+//		return 7
+//	default:
+//		return -1
+//	}
+//}
+//
+//// 获取非终结符索引
+//func (p *Parser) getNonTerminalIndex(c byte) int {
+//	switch c {
+//	case 'E':
+//		return 0
+//	case 'G':
+//		return 1
+//	case 'T':
+//		return 2
+//	case 'S':
+//		return 3
+//	case 'F':
+//		return 4
+//	default:
+//		return -1
+//	}
+//}
+//
+//// 检查合法字符
+//func isValidChar(c byte) bool {
+//	return c == 'i' || c == '+' || c == '-' || c == '*' || c == '/' ||
+//		c == '(' || c == ')' || c == '#'
+//}
+//
+//// 打印分析步骤
+//func (p *Parser) printStep(step int) {
+//	// 处理分析栈显示（替换^为ε）
+//	stackStr := strings.ReplaceAll(string(p.stack), "^", "ε")
+//	// 处理输入串显示
+//	inputStr := strings.ReplaceAll(string(p.input[p.inputPos:]), "^", "ε")
+//
+//	// 调整列宽为25以增加间距
+//	fmt.Printf("%-5d%-25s%-25s", step, stackStr, inputStr)
+//}
+//
+//// 执行分析
+//func (p *Parser) analyze() {
+//	// 初始化栈
+//	p.stack = []byte{'#', 'E'}
+//	p.inputPos = 0
+//	p.errorPos = 0
+//	step := 1
+//	//i+i#
+//	// 修改表头格式与列宽匹配
+//	fmt.Printf("%-5s%-15s%-10s%-s\n", "步骤", "分析栈", "输入串", "产生式")
+//
+//	for {
+//		if len(p.stack) == 0 {
+//			break
+//		}
+//		x := p.stack[len(p.stack)-1] // 栈顶元素
+//		a := p.input[p.inputPos]     // 当前输入字符
+//
+//		p.printStep(step)
+//		step++
+//
+//		if x == '#' {
+//			if a == '#' {
+//				fmt.Println("分析成功")
+//				break
+//			} else {
+//				fmt.Printf("分析失败：栈顶为#，但输入未结束，位置%d\n", p.inputPos)
+//				break
+//			}
+//		} else if idx := p.getTerminalIndex(x); idx != -1 {
+//			// 终结符匹配
+//			if x == a {
+//				fmt.Printf("%c匹配\n", x)
+//				p.stack = p.stack[:len(p.stack)-1] // 弹栈
+//				p.inputPos++
+//			} else {
+//				fmt.Printf("分析失败：栈顶终结符'%c'与输入符'%c'不匹配，位置%d\n", x, a, p.inputPos)
+//				break
+//			}
+//		} else {
+//			// 非终结符处理
+//			i := p.getNonTerminalIndex(x)
+//			j := p.getTerminalIndex(a)
+//
+//			if i == -1 || j == -1 {
+//				fmt.Printf("分析失败：无效符号，栈顶'%c'，输入符'%c'，位置%d\n", x, a, p.inputPos)
+//				break
+//			}
+//
+//			prod := p.table[i][j]
+//			if prod.Origin == 'N' {
+//				fmt.Printf("分析失败：无可用产生式，栈顶'%c'，输入符'%c'，位置%d\n", x, a, p.inputPos)
+//				break
+//			}
+//
+//			// 输出产生式
+//			prodStr := fmt.Sprintf("%c->%s", prod.Origin, prod.Array)
+//			fmt.Printf("%s\n", prodStr)
+//
+//			// 弹栈顶非终结符
+//			p.stack = p.stack[:len(p.stack)-1]
+//
+//			// 逆序压入产生式右部（跳过ε）
+//			if prod.Length > 0 {
+//				for k := prod.Length - 1; k >= 0; k-- {
+//					p.stack = append(p.stack, prod.Array[k])
+//				}
+//			}
+//		}
+//
+//		// 检查输入越界
+//		if p.inputPos >= len(p.input) {
+//			break
+//		}
+//	}
+//}
+//
+//func main() {
+//	parser := Parser{
+//		stack: make([]byte, 0, maxStack),
+//		input: make([]byte, maxInput),
+//	}
+//
+//	// 初始化产生式和分析表
+//	parser.initProductions()
+//
+//	// 读取输入
+//	fmt.Print("请输入符号串（以#结束）：")
+//	scanner := bufio.NewScanner(os.Stdin)
+//	scanner.Scan()
+//	inputStr := scanner.Text() + "#" // 确保以#结尾
+//
+//	// 检查输入长度
+//	if len(inputStr) > maxInput {
+//		fmt.Println("输入过长，最大支持", maxInput-1, "个字符")
+//		return
+//	}
+//
+//	// 验证输入字符
+//	for i, c := range inputStr {
+//		if !isValidChar(byte(c)) {
+//			fmt.Printf("非法字符：'%c'，位置%d\n", c, i)
+//			return
+//		}
+//		parser.input[i] = byte(c)
+//	}
+//
+//	// 执行分析
+//	parser.analyze()
+//}
